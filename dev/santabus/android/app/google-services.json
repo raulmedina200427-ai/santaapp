@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "577995367560",
+    "project_id": "appsantamovil",
+    "storage_bucket": "appsantamovil.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:577995367560:android:9fa305b2b2760a49b9ab3d",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGrlLRdOkglHqn5hu7qyxkNi_RDJuw820"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:577995367560:android:1f72d19ed1e0c8c0b9ab3d",
+        "android_client_info": {
+          "package_name": "com.example.santabus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGrlLRdOkglHqn5hu7qyxkNi_RDJuw820"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
