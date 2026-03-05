@@ -1,3 +1,5 @@
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -47,12 +49,55 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   final TextEditingController _passConfirm = TextEditingController();
 
   bool _isLoading = false;
+  bool _rememberMe = false;
+  String? _nombreArchivo;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
   }
+    Future<void> _resetPassword() async {
+   final TextEditingController _resetEmailController = TextEditingController();
+
+    showDialog(
+      context: context,
+    builder: (context) => AlertDialog(
+      title: const Text("Recuperar contraseña"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text("Ingresa tu correo electrónico para enviarte las instrucciones de cambio."),
+          const SizedBox(height: 15),
+          TextField(
+            controller: _resetEmailController,
+            decoration: const InputDecoration(
+              labelText: "Correo",
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.email),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context), //pop-up
+          child: const Text("Cancelar", style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            
+            Navigator.pop(context); // Cierra el pop-up
+            _showMessage("Se ha enviado la solicitud a su correo: ${_resetEmailController.text}");
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+          child: const Text("Enviar", style: TextStyle(color: Colors.white)),
+        ),
+      ],
+    ),
+  );
+}
+
 
   Future<void> _login() async {
     setState(() => _isLoading = true);
@@ -97,7 +142,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
         password: _passReg.text.trim(),
       );
       _showMessage("Cuenta creada con éxito");
-      _tabController.animateTo(0); // Regresar al tab de login
+      _tabController.animateTo(0); 
     } on FirebaseAuthException catch (e) {
       _showMessage(e.message ?? "Error al registrar");
     } finally {
@@ -112,6 +157,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
@@ -137,7 +183,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
               unselectedLabelColor: Colors.grey,
             ),
             SizedBox(
-              height: 450,
+              height: 500,
               child: TabBarView(
                 controller: _tabController,
                 children: [
@@ -165,16 +211,18 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   }
 
   Widget _buildForm({
-    required TextEditingController controllerEmail,
-    required TextEditingController controllerPass,
-    TextEditingController? controllerConfirm,
-    required String buttonText,
-    required VoidCallback onPressed,
-    bool isRegister = false,
-  }) {
-    return Padding(
+  required TextEditingController controllerEmail,
+  required TextEditingController controllerPass,
+  TextEditingController? controllerConfirm,
+  required String buttonText,
+  required VoidCallback onPressed,
+  bool isRegister = false,
+}) {
+  return SingleChildScrollView(
+    child: Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextField(
             controller: controllerEmail,
@@ -186,6 +234,37 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
             obscureText: true,
             decoration: const InputDecoration(labelText: 'Contraseña', border: OutlineInputBorder()),
           ),
+          if (!isRegister) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: _resetPassword,
+                style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                child: const Text(
+                  "¿Olvidaste tu contraseña?",
+                  style: TextStyle(
+                    fontSize: 13, 
+                    color: Colors.blue, 
+                    fontWeight: FontWeight.bold
+                  ),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  child: Checkbox(
+                    value: _rememberMe,
+                    onChanged: (value) => setState(() => _rememberMe = value!),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text("Recuérdame", style: TextStyle(fontSize: 13)),
+              ],
+            ),
+          ],
           if (isRegister) ...[
             const SizedBox(height: 16),
             TextField(
@@ -193,6 +272,70 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
               obscureText: true,
               decoration: const InputDecoration(labelText: 'Confirmar Contraseña', border: OutlineInputBorder()),
             ),
+            
+            // boton 
+            const SizedBox(height: 20),
+            const Text(
+              "Comprobante de domicilio",
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            
+             InkWell(
+        onTap: () async {
+          // 1. Llamamos al selector de archivos (PDF)
+          FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+
+    if (result != null) {
+      // 2. Si el usuario selecciona un archivo, actualizamos el nombre
+      setState(() {
+        _nombreArchivo = result.files.single.name;
+      });
+      _showMessage("Archivo seleccionado: $_nombreArchivo");
+    } else {
+      // 3. Si cancela, no hacemos nada o avisamos
+      _showMessage("No se seleccionó ningún archivo");
+    }
+  },
+  child: Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    decoration: BoxDecoration(
+      border: Border.all(
+        color: _nombreArchivo == null ? Colors.blue : Colors.green,
+        width: 2, // Le damos un poco más de grosor para que resalte
+      ),
+      borderRadius: BorderRadius.circular(8),
+      color: _nombreArchivo == null 
+          ? Colors.blue.withOpacity(0.05) 
+          : Colors.green.withOpacity(0.05),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          _nombreArchivo == null ? Icons.picture_as_pdf : Icons.check_circle,
+          color: _nombreArchivo == null ? Colors.blue : Colors.green,
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Text(
+            _nombreArchivo ?? "Seleccionar Comprobante",
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: _nombreArchivo == null ? Colors.blue : Colors.green,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ],
+    ),
+  ),
+),
+           
           ],
           const SizedBox(height: 24),
           SizedBox(
@@ -211,8 +354,9 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // --- VISTA DE RUTAS ---
